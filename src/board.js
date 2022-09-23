@@ -14,18 +14,18 @@ const createBoard
                    address: { column, row },
                    content: "_",
                  } ) );
-const knightMoves
-  = knight =>
+const getMoves
+  = position =>
     ( board = createBoard( 8 )( 8 )() ) =>
       [
-        { column: knight.column + 2, row: knight.row + 1 },
-        { column: knight.column + 2, row: knight.row - 1 },
-        { column: knight.column - 2, row: knight.row + 1 },
-        { column: knight.column - 2, row: knight.row - 1 },
-        { column: knight.column + 1, row: knight.row + 2 },
-        { column: knight.column + 1, row: knight.row - 2 },
-        { column: knight.column - 1, row: knight.row + 2 },
-        { column: knight.column - 1, row: knight.row - 2 },
+        { column: position.column + 2, row: position.row + 1 },
+        { column: position.column + 2, row: position.row - 1 },
+        { column: position.column - 2, row: position.row + 1 },
+        { column: position.column - 2, row: position.row - 1 },
+        { column: position.column + 1, row: position.row + 2 },
+        { column: position.column + 1, row: position.row - 2 },
+        { column: position.column - 1, row: position.row + 2 },
+        { column: position.column - 1, row: position.row - 2 },
       ].filter( move =>
         move.column >= 0
           && move.column < board[ 0 ].length
@@ -45,12 +45,42 @@ const addKnight
       },
       content: "K",
     } );
-const printBoard
-  = board =>
-    console.log( board.map( row =>
-      row.map( cell =>
-        cell.content )
-        .join( " " ) )
-      .join( "\n" ) );
+const getRoute
+    = start =>
+      end =>
+        ( counter = 0 ) => {
 
-export { addKnight, createBoard, knightMoves };
+          console.log( counter );
+          if ( counter > 5 ) { return [] }
+
+          const moves = getMoves( start )()
+            .map( move =>
+              ( {
+                address : move.address,
+                content : move.content,
+                previous: start,
+              } ) );
+          if ( moves
+            .some( cell =>
+              cell.address.column === end.column
+             && cell.address.row === end.row ) ) {
+
+            return [start, moves.find( cell =>
+              cell.address.column === end.column
+             && cell.address.row === end.row ).address];
+
+          }
+          return [start,
+            moves.map( move =>
+              ( {
+                address : move.address,
+                content : move.content,
+                next    : getRoute( move.address )( end )( counter + 1 ),
+                previous: start,
+              } ) )[ 0 ].next].flat();
+
+        };
+console.log(
+  getRoute( { column: 0, row: 0 } )( { column: 6, row: 6 } )()
+);
+export { addKnight, createBoard, getMoves };

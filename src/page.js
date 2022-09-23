@@ -1,6 +1,6 @@
 import { css } from "@emotion/css";
 
-import { addKnight, createBoard, knightMoves } from "./board.js";
+import { addKnight, createBoard, getMoves } from "./board.js";
 
 document.querySelector( "body" ).classList.add( css`
   & {
@@ -25,7 +25,10 @@ document.querySelector( "body" ).classList.add( css`
   }
 ` );
 const content        = document.querySelector( "#content" );
-const board          = createBoard( 8 )( 8 )();
+const sampleBoard    = createBoard( 8 )( 8 )();
+const knight         = addKnight( sampleBoard );
+const moves          = getMoves( knight.address )();
+const board          = createBoard( 8 )( 8 )( [knight, ...moves] );
 const boardContainer = document.createElement( "div" );
 boardContainer.classList.add( css`
   & {
@@ -35,7 +38,7 @@ boardContainer.classList.add( css`
     justify-content: center;
     width: 100%;
     height: 100%;
-    /* padding: 10em; */
+    color: hsl( 0deg 0% 100% / 0% );
 
     .row {
       display: grid;
@@ -49,8 +52,14 @@ boardContainer.classList.add( css`
         height: 2em;
 
         background-color: hsl( 0deg 0% 25% );
-        border-radius: 0.25em;
       }
+
+    &:nth-child(even) .cell:nth-child(odd) {
+      background-color: hsl( 0deg 0% 20% );
+    }
+    &:nth-child(odd) .cell:nth-child(even) {
+      background-color: hsl( 0deg 0% 20% );
+    }
     }
   }
 ` );
@@ -62,7 +71,26 @@ board.map( row => {
 
     const cellContainer = document.createElement( "span" );
     cellContainer.classList.add( "cell" );
-    cellContainer.textContent = cell.content;
+    cellContainer.append( cell.content );
+
+    // style cell based on content
+    if ( cell.content === "K" ) {
+
+      cellContainer.classList.add( css`
+        & {
+          color: hsl( 60deg 50% 100% );
+        }
+      ` );
+
+    } else if ( cell.content === "*" ) {
+
+      cellContainer.classList.add( css`
+& {
+          color: hsl( 127deg 100% 50% );
+        }
+        ` );
+
+    }
     rowContainer.append( cellContainer );
 
   } );
