@@ -1,0 +1,19 @@
+{
+  "name": "knights-travails",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "webpack --watch",
+    "start": "webpack-dev-server",
+    "push-dist": "git subtree push --prefix dist origin gh-pages"
+  },
+  "description": "",
+  "main": "board.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@adipiscing/image-slider": "^1.1.5",
+    "@emotion/css": "^11.10.0"
+  }
+}
