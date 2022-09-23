@@ -2366,7 +2366,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "addKnight": () => (/* binding */ addKnight),
 /* harmony export */   "createBoard": () => (/* binding */ createBoard),
-/* harmony export */   "knightMoves": () => (/* binding */ knightMoves)
+/* harmony export */   "getMoves": () => (/* binding */ getMoves)
 /* harmony export */ });
 const createBoard
   = rows =>
@@ -2384,18 +2384,18 @@ const createBoard
                    address: { column, row },
                    content: "_",
                  } ) );
-const knightMoves
-  = knight =>
+const getMoves
+  = position =>
     ( board = createBoard( 8 )( 8 )() ) =>
       [
-        { column: knight.column + 2, row: knight.row + 1 },
-        { column: knight.column + 2, row: knight.row - 1 },
-        { column: knight.column - 2, row: knight.row + 1 },
-        { column: knight.column - 2, row: knight.row - 1 },
-        { column: knight.column + 1, row: knight.row + 2 },
-        { column: knight.column + 1, row: knight.row - 2 },
-        { column: knight.column - 1, row: knight.row + 2 },
-        { column: knight.column - 1, row: knight.row - 2 },
+        { column: position.column + 2, row: position.row + 1 },
+        { column: position.column + 2, row: position.row - 1 },
+        { column: position.column - 2, row: position.row + 1 },
+        { column: position.column - 2, row: position.row - 1 },
+        { column: position.column + 1, row: position.row + 2 },
+        { column: position.column + 1, row: position.row - 2 },
+        { column: position.column - 1, row: position.row + 2 },
+        { column: position.column - 1, row: position.row - 2 },
       ].filter( move =>
         move.column >= 0
           && move.column < board[ 0 ].length
@@ -2415,14 +2415,44 @@ const addKnight
       },
       content: "K",
     } );
-const printBoard
-  = board =>
-    console.log( board.map( row =>
-      row.map( cell =>
-        cell.content )
-        .join( " " ) )
-      .join( "\n" ) );
+const getRoute
+    = start =>
+      end =>
+        ( counter = 0 ) => {
 
+          console.log( counter );
+          if ( counter > 5 ) { return [] }
+
+          const moves = getMoves( start )()
+            .map( move =>
+              ( {
+                address : move.address,
+                content : move.content,
+                previous: start,
+              } ) );
+          if ( moves
+            .some( cell =>
+              cell.address.column === end.column
+             && cell.address.row === end.row ) ) {
+
+            return [start, moves.find( cell =>
+              cell.address.column === end.column
+             && cell.address.row === end.row ).address];
+
+          }
+          return [start,
+            moves.map( move =>
+              ( {
+                address : move.address,
+                content : move.content,
+                next    : getRoute( move.address )( end )( counter + 1 ),
+                previous: start,
+              } ) )[ 0 ].next].flat();
+
+        };
+console.log(
+  getRoute( { column: 0, row: 0 } )( { column: 6, row: 6 } )()
+);
 
 
 
@@ -2464,7 +2494,10 @@ document.querySelector( "body" ).classList.add( _emotion_css__WEBPACK_IMPORTED_M
   }
 ` );
 const content        = document.querySelector( "#content" );
-const board          = (0,_board_js__WEBPACK_IMPORTED_MODULE_1__.createBoard)( 8 )( 8 )();
+const sampleBoard    = (0,_board_js__WEBPACK_IMPORTED_MODULE_1__.createBoard)( 8 )( 8 )();
+const knight         = (0,_board_js__WEBPACK_IMPORTED_MODULE_1__.addKnight)( sampleBoard );
+const moves          = (0,_board_js__WEBPACK_IMPORTED_MODULE_1__.getMoves)( knight.address )();
+const board          = (0,_board_js__WEBPACK_IMPORTED_MODULE_1__.createBoard)( 8 )( 8 )( [knight, ...moves] );
 const boardContainer = document.createElement( "div" );
 boardContainer.classList.add( _emotion_css__WEBPACK_IMPORTED_MODULE_0__.css`
   & {
@@ -2474,7 +2507,7 @@ boardContainer.classList.add( _emotion_css__WEBPACK_IMPORTED_MODULE_0__.css`
     justify-content: center;
     width: 100%;
     height: 100%;
-    /* padding: 10em; */
+    color: hsl( 0deg 0% 100% / 0% );
 
     .row {
       display: grid;
@@ -2488,8 +2521,14 @@ boardContainer.classList.add( _emotion_css__WEBPACK_IMPORTED_MODULE_0__.css`
         height: 2em;
 
         background-color: hsl( 0deg 0% 25% );
-        border-radius: 0.25em;
       }
+
+    &:nth-child(even) .cell:nth-child(odd) {
+      background-color: hsl( 0deg 0% 20% );
+    }
+    &:nth-child(odd) .cell:nth-child(even) {
+      background-color: hsl( 0deg 0% 20% );
+    }
     }
   }
 ` );
@@ -2501,7 +2540,26 @@ board.map( row => {
 
     const cellContainer = document.createElement( "span" );
     cellContainer.classList.add( "cell" );
-    cellContainer.textContent = cell.content;
+    cellContainer.append( cell.content );
+
+    // style cell based on content
+    if ( cell.content === "K" ) {
+
+      cellContainer.classList.add( _emotion_css__WEBPACK_IMPORTED_MODULE_0__.css`
+        & {
+          color: hsl( 60deg 50% 100% );
+        }
+      ` );
+
+    } else if ( cell.content === "*" ) {
+
+      cellContainer.classList.add( _emotion_css__WEBPACK_IMPORTED_MODULE_0__.css`
+& {
+          color: hsl( 127deg 100% 50% );
+        }
+        ` );
+
+    }
     rowContainer.append( cellContainer );
 
   } );
