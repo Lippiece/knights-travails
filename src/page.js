@@ -27,7 +27,7 @@ document.querySelector( "body" ).classList.add( css`
 const content        = document.querySelector( "#content" );
 const sampleBoard    = createBoard( 8 )( 8 )();
 const knight         = addKnight( sampleBoard );
-const moves          = getMoves( knight.address )();
+const moves          = getMoves( knight.address )()( 3 );
 const board          = createBoard( 8 )( 8 )( [knight, ...moves] );
 const boardContainer = document.createElement( "div" );
 boardContainer.classList.add( css`
@@ -63,38 +63,52 @@ boardContainer.classList.add( css`
     }
   }
 ` );
-board.map( row => {
 
-  const rowContainer = document.createElement( "div" );
-  rowContainer.classList.add( "row" );
-  row.map( cell => {
+const drawCell = ( cell, rowContainer ) => {
 
-    const cellContainer = document.createElement( "span" );
-    cellContainer.classList.add( "cell" );
-    cellContainer.append( cell.content );
+  const cellContainer = document.createElement( "span" );
+  cellContainer.classList.add( "cell" );
+  cellContainer.append( cell.content );
 
-    // style cell based on content
+  // style cell based on content
+  styleCell( cell )( cellContainer );
+  rowContainer.append( cellContainer );
+
+};
+const styleCell
+= cell =>
+  cellContainer => {
+
     if ( cell.content === "K" ) {
 
-      cellContainer.classList.add( css`
+      return cellContainer.classList.add( css`
         & {
           color: hsl( 60deg 50% 100% );
         }
       ` );
 
-    } else if ( cell.content === "*" ) {
+    }
 
-      cellContainer.classList.add( css`
-& {
+    return cellContainer.classList.add( css`
+        & {
           color: hsl( 127deg 100% 50% );
         }
-        ` );
+      ` );
 
-    }
-    rowContainer.append( cellContainer );
+  };
+const drawBoard = input => {
+
+  input.map( row => {
+
+    const rowContainer = document.createElement( "div" );
+    rowContainer.classList.add( "row" );
+    row.map( cell =>
+      drawCell( cell, rowContainer ) );
+    boardContainer.append( rowContainer );
 
   } );
-  boardContainer.append( rowContainer );
+  content.append( boardContainer );
 
-} );
-content.append( boardContainer );
+};
+
+drawBoard( board );
