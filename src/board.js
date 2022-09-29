@@ -1,3 +1,5 @@
+import isEqual from  "lodash/fp/isEqual.js";
+
 const createBoard
   = rows =>
     columns =>
@@ -16,8 +18,8 @@ const createBoard
                  } ) );
 const getMoves
   = position =>
-    ( board = createBoard( 8 )( 8 )() ) =>
-      depth => {
+      ( depth = 2 ) => {
+        const board = createBoard( 8 )( 8 )()
 
         if ( depth === 0 ) { return [position] }
         const addresses = [
@@ -37,9 +39,10 @@ const getMoves
 
         return addresses.map( move =>
           ( {
-            address: board[ move.row ][ move.column ].address,
-            content: 3 - depth,
-            next   : getMoves( move )( board )( depth - 1 ),
+            address : board[ move.row ][ move.column ].address,
+            content : "*",
+            next    : getMoves( move )( depth - 1 ),
+            previous: position,
           } ) );
 
       };
@@ -52,11 +55,37 @@ const addKnight
       },
       content: "K",
     } );
-console.log(
-  getMoves(
-    addKnight( createBoard( 8 )( 8 )() ).address
-  )(
-    createBoard( 8 )( 8 )()
-  )( 3 )
-);
+const getPath
+  = start =>
+    end =>
+      ( path = [] ) => {
+
+        if ( isEqual( path[ path.length - 1 ] )( end ) ) { return path }
+
+        const next = [...start]
+          .sort( ( previous, next_ ) =>
+            ( Math.abs( previous.address.column - end.column )
+              + Math.abs( previous.address.row - end.row ) )
+              - (
+                Math.abs( next_.address.column - end.column )
+              + Math.abs( next_.address.row - end.row ) ) );
+
+        // last some contain the same distance
+        if ( isEqual( next[ 0 ].address )( path[ path.length - 2 ] ) ) {
+
+          return getPath( getMoves( next[ 1 ].address )() )( end )( [
+            ...path,
+            next[ 1 ].address,
+          ] );
+
+        }
+
+        return getPath( getMoves( next[ 0 ].address )() )( end )( [
+          ...path,
+          next[ 0 ].address,
+        ] );
+
+      };
+const startMoves = getMoves( { column: 0, row: 0 } )( 2 );
+console.log( getPath( startMoves )( { column: 7, row: 7 } )() );
 export { addKnight, createBoard, getMoves };
