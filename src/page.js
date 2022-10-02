@@ -1,8 +1,8 @@
 import { css } from "@emotion/css";
 
-import { addKnight, createBoard, getMoves } from "./board.js";
+import { addRandomKnight, createBoard, getMovesWithDepth, getPath } from "./board";
 
-document.querySelector( "body" ).classList.add( css`
+const bodyStyle      = document.querySelector( "body" ).classList.add( css`
   & {
     width: 100vw;
     height: 100vh;
@@ -25,12 +25,19 @@ document.querySelector( "body" ).classList.add( css`
   }
 ` );
 const content        = document.querySelector( "#content" );
-const sampleBoard    = createBoard( 8 )( 8 )();
-const knight         = addKnight( sampleBoard );
-const moves          = getMoves( knight.address )()( 3 );
-const board          = createBoard( 8 )( 8 )( [knight, ...moves] );
+const knight         = addRandomKnight();
+const moves          = getMovesWithDepth( knight.address )();
+const board          = createBoard( 8 )( 8 )( [
+  knight,
+
+  // ...moves,
+  ...getPath(
+    getMovesWithDepth( knight.address )()
+  )(
+    { column: 0, row: 0 }
+  )()] );
 const boardContainer = document.createElement( "div" );
-boardContainer.classList.add( css`
+const boardStyle     = boardContainer.classList.add( css`
   & {
     display: flex;
     flex-direction: column;
@@ -63,25 +70,26 @@ boardContainer.classList.add( css`
     }
   }
 ` );
+const drawCell
+  = cell =>
+    rowElement => {
 
-const drawCell = ( cell, rowContainer ) => {
+      const cellElement = document.createElement( "span" );
+      const cellClass   = cellElement.classList.add( "cell" );
+      cellElement.append( cell.content );
 
-  const cellContainer = document.createElement( "span" );
-  cellContainer.classList.add( "cell" );
-  cellContainer.append( cell.content );
+      // style cell based on content
+      const cellStyle = styleCell( cell )( cellElement );
+      return rowElement.append( cellElement );
 
-  // style cell based on content
-  styleCell( cell )( cellContainer );
-  rowContainer.append( cellContainer );
-
-};
+    };
 const styleCell
 = cell =>
-  cellContainer => {
+  cellElement => {
 
     if ( cell.content === "K" ) {
 
-      return cellContainer.classList.add( css`
+      return cellElement.classList.add( css`
         & {
           color: hsl( 60deg 50% 100% );
         }
@@ -89,7 +97,7 @@ const styleCell
 
     }
 
-    return cellContainer.classList.add( css`
+    return cellElement.classList.add( css`
         & {
           color: hsl( 127deg 100% 50% );
         }
@@ -100,14 +108,14 @@ const drawBoard = input => {
 
   input.map( row => {
 
-    const rowContainer = document.createElement( "div" );
-    rowContainer.classList.add( "row" );
+    const rowElement = document.createElement( "div" );
+    rowElement.classList.add( "row" );
     row.map( cell =>
-      drawCell( cell, rowContainer ) );
-    boardContainer.append( rowContainer );
+      drawCell( cell )( rowElement ) );
+    return boardContainer.append( rowElement );
 
   } );
-  content.append( boardContainer );
+  return content.append( boardContainer );
 
 };
 

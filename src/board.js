@@ -1,4 +1,4 @@
-import isEqual from  "lodash/fp/isEqual.js";
+import fp from  "lodash/fp";
 
 const createBoard
   = rows =>
@@ -16,76 +16,97 @@ const createBoard
                    address: { column, row },
                    content: " ",
                  } ) );
-const getMoves
+const getMovesWithDepth
   = position =>
-      ( depth = 2 ) => {
-        const board = createBoard( 8 )( 8 )()
+    ( depth = 2 ) => {
 
-        if ( depth === 0 ) { return [position] }
-        const addresses = [
-          { column: position.column + 2, row: position.row + 1 },
-          { column: position.column + 2, row: position.row - 1 },
-          { column: position.column - 2, row: position.row + 1 },
-          { column: position.column - 2, row: position.row - 1 },
-          { column: position.column + 1, row: position.row + 2 },
-          { column: position.column + 1, row: position.row - 2 },
-          { column: position.column - 1, row: position.row + 2 },
-          { column: position.column - 1, row: position.row - 2 },
-        ].filter( move =>
-          move.column >= 0
+      const board = createBoard( 8 )( 8 )();
+
+      if ( depth === 0 ) { return [position] }
+      const addresses = [
+        { column: position.column + 2, row: position.row + 1 },
+        { column: position.column + 2, row: position.row - 1 },
+        { column: position.column - 2, row: position.row + 1 },
+        { column: position.column - 2, row: position.row - 1 },
+        { column: position.column + 1, row: position.row + 2 },
+        { column: position.column + 1, row: position.row - 2 },
+        { column: position.column - 1, row: position.row + 2 },
+        { column: position.column - 1, row: position.row - 2 },
+      ].filter( move =>
+        move.column >= 0
           && move.column < board[ 0 ].length
           && move.row >= 0
           && move.row < board.length );
 
-        return addresses.map( move =>
-          ( {
-            address : board[ move.row ][ move.column ].address,
-            content : "*",
-            next    : getMoves( move )( depth - 1 ),
-            previous: position,
-          } ) );
+      return addresses.map( move =>
+        ( {
+          address : board[ move.row ][ move.column ].address,
+          content : "·",
+          next    : getMovesWithDepth( move )( depth - 1 ),
+          previous: position,
+        } ) );
 
-      };
-const addKnight
-  = board =>
-    ( {
-      address: {
-        column: Math.floor( Math.random() * board[ 0 ].length ),
-        row   : Math.floor( Math.random() * board.length ),
-      },
-      content: "K",
-    } );
+    };
+const addRandomKnight = () =>
+  ( {
+    address: {
+      column: Math.floor( Math.random() * board[ 0 ].length ),
+      row   : Math.floor( Math.random() * board.length ),
+    },
+    content: "K",
+  } );
+const checkIfMovePresent
+  = path =>
+    move =>
+      !!path.some( pathMove =>
+        fp.isEqual( pathMove )( move.address ) );
+const markPath
+  = path =>
+    path.map( move =>
+      ( {
+        address: move,
+        content: fp.indexOf( move )( path ) + 1,
+      } ) );
+const sortMovesByDistance
+  = allMoves =>
+    destination =>
+    // eslint-disable-next-line fp/no-mutating-methods
+      [...allMoves]
+        .sort( ( previous, next_ ) =>
+          ( Math.abs( previous.address.column - destination.column )
+        + Math.abs( previous.address.row - destination.row ) )
+        - (
+          Math.abs( next_.address.column - destination.column )
+          + Math.abs( next_.address.row - destination.row ) ) );
+const addLength
+  = sortedMoves =>
+    path =>
+      sortedMoves.map( move =>
+        ( {
+          ...move,
+          length: path.length + 1,
+        } ) );
 const getPath
-  = start =>
-    end =>
+  = allMoves =>
+    destination =>
       ( path = [] ) => {
 
-        if ( isEqual( path[ path.length - 1 ] )( end ) ) { return path }
+        if ( fp.isEqual( path[ path.length - 1 ] )( destination ) ) {
 
-        const next = [...start]
-          .sort( ( previous, next_ ) =>
-            ( Math.abs( previous.address.column - end.column )
-              + Math.abs( previous.address.row - end.row ) )
-              - (
-                Math.abs( next_.address.column - end.column )
-              + Math.abs( next_.address.row - end.row ) ) );
-
-        // last some contain the same distance
-        if ( isEqual( next[ 0 ].address )( path[ path.length - 2 ] ) ) {
-
-          return getPath( getMoves( next[ 1 ].address )() )( end )( [
-            ...path,
-            next[ 1 ].address,
-          ] );
+          return markPath( path );
 
         }
 
-        return getPath( getMoves( next[ 0 ].address )() )( end )( [
+        const sortedMoves = sortMovesByDistance( allMoves )( destination );
+        const nextMove    = sortedMoves.find( move =>
+          !checkIfMovePresent( path )( move.address ) );
+        return getPath(
+          getMovesWithDepth( nextMove.address )( 2 )
+        )( destination )( [
           ...path,
-          next[ 0 ].address,
+          nextMove.address,
         ] );
 
       };
-const startMoves = getMoves( { column: 0, row: 0 } )( 2 );
-console.log( getPath( startMoves )( { column: 7, row: 7 } )() );
-export { addKnight, createBoard, getMoves };
+const board = createBoard( 8 )( 8 )();
+export { addRandomKnight, createBoard, getMovesWithDepth, getPath };
