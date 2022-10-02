@@ -26,16 +26,11 @@ const bodyStyle      = document.querySelector( "body" ).classList.add( css`
 ` );
 const content        = document.querySelector( "#content" );
 const knight         = addRandomKnight();
-const moves          = getMovesWithDepth( knight.address )();
-const board          = createBoard( 8 )( 8 )( [
-  knight,
-
-  // ...moves,
-  ...getPath(
-    getMovesWithDepth( knight.address )()
-  )(
-    { column: 0, row: 0 }
-  )()] );
+const moves          = getMovesWithDepth( knight.address )()();
+const path           = getPath( moves )( { column: 7, row: 7 } )()
+  .sort( ( previous, next ) =>
+    previous.complete.length - next.complete.length )[ 0 ].complete;
+const board          = createBoard( 8 )( 8 )( [knight, ...path] );
 const boardContainer = document.createElement( "div" );
 const boardStyle     = boardContainer.classList.add( css`
   & {
