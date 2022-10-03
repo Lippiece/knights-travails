@@ -1,6 +1,6 @@
 import { css } from "@emotion/css";
 
-import { addRandomKnight, createBoard, getMovesWithDepth, getPath } from "./board";
+import { addCustomKnight, addRandomKnight, createBoard, getMovesWithDepth, getShortestPath } from "./board";
 
 const bodyStyle      = document.querySelector( "body" ).classList.add( css`
   & {
@@ -25,13 +25,8 @@ const bodyStyle      = document.querySelector( "body" ).classList.add( css`
   }
 ` );
 const content        = document.querySelector( "#content" );
-const knight         = addRandomKnight();
-const moves          = getMovesWithDepth( knight.address )()();
-const path           = getPath( moves )( { column: 7, row: 7 } )()
-  .sort( ( previous, next ) =>
-    previous.complete.length - next.complete.length )[ 0 ].complete;
-const board          = createBoard( 8 )( 8 )( [knight, ...path] );
 const boardContainer = document.createElement( "div" );
+const sampleBoard    = createBoard( 8 )( 8 )();
 const boardStyle     = boardContainer.classList.add( css`
   & {
     display: flex;
@@ -65,6 +60,20 @@ const boardStyle     = boardContainer.classList.add( css`
     }
   }
 ` );
+const addCellEventListeners
+  = cell =>
+    cellElement =>
+      cellElement.addEventListener( "click", () => {
+
+        const newKnight = addCustomKnight( cell.address );
+        const moves     = getMovesWithDepth( newKnight.address )()();
+        const path      = getShortestPath( moves )( { column: 7, row: 7 } );
+        const board     = createBoard( 8 )( 8 )( [newKnight, ...path] );
+
+        boardContainer.replaceChildren();
+        drawBoard( board );
+
+      } );
 const drawCell
   = cell =>
     rowElement => {
@@ -75,7 +84,9 @@ const drawCell
 
       // style cell based on content
       const cellStyle = styleCell( cell )( cellElement );
-      return rowElement.append( cellElement );
+      rowElement.append( cellElement );
+
+      return addCellEventListeners( cell )( cellElement );
 
     };
 const styleCell
@@ -85,17 +96,13 @@ const styleCell
     if ( cell.content === "K" ) {
 
       return cellElement.classList.add( css`
-        & {
-          color: hsl( 60deg 50% 100% );
-        }
+        & { color: hsl( 60deg 50% 100% ); }
       ` );
 
     }
 
     return cellElement.classList.add( css`
-        & {
-          color: hsl( 127deg 100% 50% );
-        }
+        & { color: hsl( 127deg 100% 50% ); }
       ` );
 
   };
@@ -114,4 +121,4 @@ const drawBoard = input => {
 
 };
 
-drawBoard( board );
+drawBoard( sampleBoard );

@@ -79,11 +79,19 @@ const getMovesWithDepth
 const addRandomKnight = () =>
   ( {
     address: {
-      column: Math.floor( Math.random() * board[ 0 ].length ),
-      row   : Math.floor( Math.random() * board.length ),
+      /* column: Math.floor( Math.random() * board[ 0 ].length ),
+         row   : Math.floor( Math.random() * board.length ), */
+      column: 6,
+      row   : 6,
     },
     content: "K",
   } );
+const addCustomKnight
+  = address =>
+    ( {
+      address,
+      content: "K",
+    } );
 const checkIfMovePresent
   = path =>
     move =>
@@ -107,7 +115,7 @@ const sortMovesByDistance
         - (
           Math.abs( next.address.column - destination.column )
           + Math.abs( next.address.row - destination.row ) ) );
-const getPath
+const getPathsToDestination
   = inputMoves =>
     destination =>
       ( path = [] ) => {
@@ -124,12 +132,12 @@ const getPath
           return { incomplete: markPath( [...path, inputMoves] ) };
 
         }
-        const sortedMoves = sortMovesByDistance( inputMoves )( destination )
-          .slice( 0, 2 )
+        const sortedMoves = [...sortMovesByDistance( inputMoves )( destination )]
+          .slice( 0, 3 )
           .filter( move =>
             !checkIfMovePresent( path )( move.address ) );
         return sortedMoves.flatMap( move =>
-          getPath( move.next )( destination )( [
+          getPathsToDestination( move.next )( destination )( [
             ...path,
             move.address,
           ] ) )
@@ -137,18 +145,15 @@ const getPath
             move.complete );
 
       };
-const board  = createBoard( 8 )( 8 )();
-const knight = addRandomKnight();
-const moves  = getMovesWithDepth( knight.address )()();
-const path   = getPath( moves )( { column: 7, row: 7 } )();
+const getShortestPath
+  = inputMoves =>
+    destination => {
 
-// filter out paths that don't lead to the destination
+      const paths = getPathsToDestination( inputMoves )( destination )();
+      return paths.sort( ( previous, next ) =>
+        previous.complete.length - next.complete.length )[ 0 ].complete;
 
-console.log(
-  "path",
-  path.sort( ( previous, next ) =>
-    previous.complete.length - next.complete.length )[ 0 ].complete
-);
-console.log( "end" );
+    };
+const board = createBoard( 8 )( 8 )();
 
-export { addRandomKnight, createBoard, getMovesWithDepth, getPath };
+export { addCustomKnight, addRandomKnight, createBoard, getMovesWithDepth, getShortestPath };
