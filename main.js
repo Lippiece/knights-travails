@@ -3507,10 +3507,11 @@ function combine (array, callback) {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "addCustomKnight": () => (/* binding */ addCustomKnight),
 /* harmony export */   "addRandomKnight": () => (/* binding */ addRandomKnight),
 /* harmony export */   "createBoard": () => (/* binding */ createBoard),
 /* harmony export */   "getMovesWithDepth": () => (/* binding */ getMovesWithDepth),
-/* harmony export */   "getPath": () => (/* binding */ getPath)
+/* harmony export */   "getShortestPath": () => (/* binding */ getShortestPath)
 /* harmony export */ });
 /* harmony import */ var lodash_fp__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! lodash/fp */ "./node_modules/lodash/fp.js");
 /* harmony import */ var lodash_fp__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(lodash_fp__WEBPACK_IMPORTED_MODULE_0__);
@@ -3595,11 +3596,19 @@ const getMovesWithDepth
 const addRandomKnight = () =>
   ( {
     address: {
-      column: Math.floor( Math.random() * board[ 0 ].length ),
-      row   : Math.floor( Math.random() * board.length ),
+      /* column: Math.floor( Math.random() * board[ 0 ].length ),
+         row   : Math.floor( Math.random() * board.length ), */
+      column: 6,
+      row   : 6,
     },
     content: "K",
   } );
+const addCustomKnight
+  = address =>
+    ( {
+      address,
+      content: "K",
+    } );
 const checkIfMovePresent
   = path =>
     move =>
@@ -3623,7 +3632,7 @@ const sortMovesByDistance
         - (
           Math.abs( next.address.column - destination.column )
           + Math.abs( next.address.row - destination.row ) ) );
-const getPath
+const getPathsToDestination
   = inputMoves =>
     destination =>
       ( path = [] ) => {
@@ -3640,12 +3649,12 @@ const getPath
           return { incomplete: markPath( [...path, inputMoves] ) };
 
         }
-        const sortedMoves = sortMovesByDistance( inputMoves )( destination )
-          .slice( 0, 2 )
+        const sortedMoves = [...sortMovesByDistance( inputMoves )( destination )]
+          .slice( 0, 3 )
           .filter( move =>
             !checkIfMovePresent( path )( move.address ) );
         return sortedMoves.flatMap( move =>
-          getPath( move.next )( destination )( [
+          getPathsToDestination( move.next )( destination )( [
             ...path,
             move.address,
           ] ) )
@@ -3653,19 +3662,16 @@ const getPath
             move.complete );
 
       };
-const board  = createBoard( 8 )( 8 )();
-const knight = addRandomKnight();
-const moves  = getMovesWithDepth( knight.address )()();
-const path   = getPath( moves )( { column: 7, row: 7 } )();
+const getShortestPath
+  = inputMoves =>
+    destination => {
 
-// filter out paths that don't lead to the destination
+      const paths = getPathsToDestination( inputMoves )( destination )();
+      return paths.sort( ( previous, next ) =>
+        previous.complete.length - next.complete.length )[ 0 ].complete;
 
-console.log(
-  "path",
-  path.sort( ( previous, next ) =>
-    previous.complete.length - next.complete.length )[ 0 ].complete
-);
-console.log( "end" );
+    };
+const board = createBoard( 8 )( 8 )();
 
 
 
@@ -3709,13 +3715,8 @@ const bodyStyle      = document.querySelector( "body" ).classList.add( _emotion_
   }
 ` );
 const content        = document.querySelector( "#content" );
-const knight         = (0,_board__WEBPACK_IMPORTED_MODULE_1__.addRandomKnight)();
-const moves          = (0,_board__WEBPACK_IMPORTED_MODULE_1__.getMovesWithDepth)( knight.address )()();
-const path           = (0,_board__WEBPACK_IMPORTED_MODULE_1__.getPath)( moves )( { column: 7, row: 7 } )()
-  .sort( ( previous, next ) =>
-    previous.complete.length - next.complete.length )[ 0 ].complete;
-const board          = (0,_board__WEBPACK_IMPORTED_MODULE_1__.createBoard)( 8 )( 8 )( [knight, ...path] );
 const boardContainer = document.createElement( "div" );
+const sampleBoard    = (0,_board__WEBPACK_IMPORTED_MODULE_1__.createBoard)( 8 )( 8 )();
 const boardStyle     = boardContainer.classList.add( _emotion_css__WEBPACK_IMPORTED_MODULE_0__.css`
   & {
     display: flex;
@@ -3749,6 +3750,20 @@ const boardStyle     = boardContainer.classList.add( _emotion_css__WEBPACK_IMPOR
     }
   }
 ` );
+const addCellEventListeners
+  = cell =>
+    cellElement =>
+      cellElement.addEventListener( "click", () => {
+
+        const newKnight = (0,_board__WEBPACK_IMPORTED_MODULE_1__.addCustomKnight)( cell.address );
+        const moves     = (0,_board__WEBPACK_IMPORTED_MODULE_1__.getMovesWithDepth)( newKnight.address )()();
+        const path      = (0,_board__WEBPACK_IMPORTED_MODULE_1__.getShortestPath)( moves )( { column: 7, row: 7 } );
+        const board     = (0,_board__WEBPACK_IMPORTED_MODULE_1__.createBoard)( 8 )( 8 )( [newKnight, ...path] );
+
+        boardContainer.replaceChildren();
+        drawBoard( board );
+
+      } );
 const drawCell
   = cell =>
     rowElement => {
@@ -3759,7 +3774,9 @@ const drawCell
 
       // style cell based on content
       const cellStyle = styleCell( cell )( cellElement );
-      return rowElement.append( cellElement );
+      rowElement.append( cellElement );
+
+      return addCellEventListeners( cell )( cellElement );
 
     };
 const styleCell
@@ -3769,17 +3786,13 @@ const styleCell
     if ( cell.content === "K" ) {
 
       return cellElement.classList.add( _emotion_css__WEBPACK_IMPORTED_MODULE_0__.css`
-        & {
-          color: hsl( 60deg 50% 100% );
-        }
+        & { color: hsl( 60deg 50% 100% ); }
       ` );
 
     }
 
     return cellElement.classList.add( _emotion_css__WEBPACK_IMPORTED_MODULE_0__.css`
-        & {
-          color: hsl( 127deg 100% 50% );
-        }
+        & { color: hsl( 127deg 100% 50% ); }
       ` );
 
   };
@@ -3798,7 +3811,7 @@ const drawBoard = input => {
 
 };
 
-drawBoard( board );
+drawBoard( sampleBoard );
 
 
 /***/ })
