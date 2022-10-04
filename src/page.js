@@ -2,8 +2,13 @@ import { css } from "@emotion/css";
 
 import { addCustomKnight, addRandomKnight, createBoard, getMovesWithDepth, getShortestPath } from "./board";
 
-const bodyStyle      = document.querySelector( "body" ).classList.add( css`
+const content      = document.querySelector( "#content" );
+const contentStyle = content.classList.add( css`
   & {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     width: 100vw;
     height: 100vh;
 
@@ -19,22 +24,29 @@ const bodyStyle      = document.querySelector( "body" ).classList.add( css`
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      width: 100%;
-      height: 100%;
     }
   }
 ` );
-const content        = document.querySelector( "#content" );
+const tip          = document.createElement( "h2" );
+const tipStyle     = tip.classList.add( css`
+  & {
+
+    color: hsl( 0deg 0% 100% / 75% );
+    font-size: 1.5em;
+    font-family: monospace;
+    line-height: 1.5;
+  }
+` );
+tip.append( "Reload to start over" );
 const boardContainer = document.createElement( "div" );
-const sampleBoard    = createBoard( 8 )( 8 )();
-const boardStyle     = boardContainer.classList.add( css`
+content.append( tip );
+const sampleBoard = createBoard( 8 )( 8 )();
+const boardStyle  = boardContainer.classList.add( css`
   & {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    width: 100%;
-    height: 100%;
     color: hsl( 0deg 0% 100% / 0% );
 
     .row {
@@ -60,35 +72,57 @@ const boardStyle     = boardContainer.classList.add( css`
     }
   }
 ` );
-const addCellEventListeners
-  = cell =>
-    cellElement =>
-      cellElement.addEventListener( "click", () => {
+const addKnight   = cell => {
 
-        const newKnight = addCustomKnight( cell.address );
-        const moves     = getMovesWithDepth( newKnight.address )()();
-        const path      = getShortestPath( moves )( { column: 7, row: 7 } );
-        const board     = createBoard( 8 )( 8 )( [newKnight, ...path] );
+  const knight = addCustomKnight( cell.address );
+  const board  = createBoard( 8 )( 8 )( [knight] );
 
-        boardContainer.replaceChildren();
-        drawBoard( board );
+  boardContainer.replaceChildren();
+  drawBoard( board )( knight );
 
-      } );
-const drawCell
-  = cell =>
-    rowElement => {
+  return knight;
 
-      const cellElement = document.createElement( "span" );
-      const cellClass   = cellElement.classList.add( "cell" );
-      cellElement.append( cell.content );
+};
+const addPath
+  = knight =>
+    cell => {
 
-      // style cell based on content
-      const cellStyle = styleCell( cell )( cellElement );
-      rowElement.append( cellElement );
+      const moves = getMovesWithDepth( knight.address )()();
+      const path  = getShortestPath( moves )( cell.address );
+      const board = createBoard( 8 )( 8 )( [knight, ...path] );
 
-      return addCellEventListeners( cell )( cellElement );
+      boardContainer.replaceChildren();
+      drawBoard( board )( knight );
 
     };
+const drawCell
+  = cell =>
+    rowElement =>
+      knight => {
+
+        const cellElement = document.createElement( "span" );
+        const cellClass   = cellElement.classList.add( "cell" );
+        cellElement.append( cell.content );
+
+        // style cell based on content
+        const cellStyle = styleCell( cell )( cellElement );
+        rowElement.append( cellElement );
+        const listener = cellElement.addEventListener(
+          "click",
+          () => {
+
+            if ( !knight ) {
+
+              return addKnight( cell );
+
+            }
+            addPath( knight )( cell );
+
+          },
+          { once: true }
+        );
+
+      };
 const styleCell
 = cell =>
   cellElement => {
@@ -106,19 +140,21 @@ const styleCell
       ` );
 
   };
-const drawBoard = input => {
+const drawBoard
+  = input =>
+    knight => {
 
-  input.map( row => {
+      input.map( row => {
 
-    const rowElement = document.createElement( "div" );
-    rowElement.classList.add( "row" );
-    row.map( cell =>
-      drawCell( cell )( rowElement ) );
-    return boardContainer.append( rowElement );
+        const rowElement = document.createElement( "div" );
+        rowElement.classList.add( "row" );
+        row.map( cell =>
+          drawCell( cell )( rowElement )( knight ) );
+        return boardContainer.append( rowElement );
 
-  } );
-  return content.append( boardContainer );
+      } );
+      return content.append( boardContainer );
 
-};
+    };
 
-drawBoard( sampleBoard );
+drawBoard( sampleBoard )();

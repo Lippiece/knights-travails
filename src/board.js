@@ -122,8 +122,6 @@ const getPathsToDestination
 
         if ( fp.isEqual( path[ path.length - 1 ] )( destination ) ) {
 
-          console.log( "Found path" );
-          console.log( "path", { complete: markPath( path ) } );
           return { complete: markPath( path ) };
 
         }
