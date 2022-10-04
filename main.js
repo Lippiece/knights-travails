@@ -3639,8 +3639,6 @@ const getPathsToDestination
 
         if ( lodash_fp__WEBPACK_IMPORTED_MODULE_0___default().isEqual( path[ path.length - 1 ] )( destination ) ) {
 
-          console.log( "Found path" );
-          console.log( "path", { complete: markPath( path ) } );
           return { complete: markPath( path ) };
 
         }
@@ -3692,8 +3690,13 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-const bodyStyle      = document.querySelector( "body" ).classList.add( _emotion_css__WEBPACK_IMPORTED_MODULE_0__.css`
+const content      = document.querySelector( "#content" );
+const contentStyle = content.classList.add( _emotion_css__WEBPACK_IMPORTED_MODULE_0__.css`
   & {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     width: 100vw;
     height: 100vh;
 
@@ -3709,22 +3712,29 @@ const bodyStyle      = document.querySelector( "body" ).classList.add( _emotion_
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      width: 100%;
-      height: 100%;
     }
   }
 ` );
-const content        = document.querySelector( "#content" );
+const tip          = document.createElement( "h2" );
+const tipStyle     = tip.classList.add( _emotion_css__WEBPACK_IMPORTED_MODULE_0__.css`
+  & {
+
+    color: hsl( 0deg 0% 100% / 75% );
+    font-size: 1.5em;
+    font-family: monospace;
+    line-height: 1.5;
+  }
+` );
+tip.append( "Reload to start over" );
 const boardContainer = document.createElement( "div" );
-const sampleBoard    = (0,_board__WEBPACK_IMPORTED_MODULE_1__.createBoard)( 8 )( 8 )();
-const boardStyle     = boardContainer.classList.add( _emotion_css__WEBPACK_IMPORTED_MODULE_0__.css`
+content.append( tip );
+const sampleBoard = (0,_board__WEBPACK_IMPORTED_MODULE_1__.createBoard)( 8 )( 8 )();
+const boardStyle  = boardContainer.classList.add( _emotion_css__WEBPACK_IMPORTED_MODULE_0__.css`
   & {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    width: 100%;
-    height: 100%;
     color: hsl( 0deg 0% 100% / 0% );
 
     .row {
@@ -3750,35 +3760,57 @@ const boardStyle     = boardContainer.classList.add( _emotion_css__WEBPACK_IMPOR
     }
   }
 ` );
-const addCellEventListeners
-  = cell =>
-    cellElement =>
-      cellElement.addEventListener( "click", () => {
+const addKnight   = cell => {
 
-        const newKnight = (0,_board__WEBPACK_IMPORTED_MODULE_1__.addCustomKnight)( cell.address );
-        const moves     = (0,_board__WEBPACK_IMPORTED_MODULE_1__.getMovesWithDepth)( newKnight.address )()();
-        const path      = (0,_board__WEBPACK_IMPORTED_MODULE_1__.getShortestPath)( moves )( { column: 7, row: 7 } );
-        const board     = (0,_board__WEBPACK_IMPORTED_MODULE_1__.createBoard)( 8 )( 8 )( [newKnight, ...path] );
+  const knight = (0,_board__WEBPACK_IMPORTED_MODULE_1__.addCustomKnight)( cell.address );
+  const board  = (0,_board__WEBPACK_IMPORTED_MODULE_1__.createBoard)( 8 )( 8 )( [knight] );
 
-        boardContainer.replaceChildren();
-        drawBoard( board );
+  boardContainer.replaceChildren();
+  drawBoard( board )( knight );
 
-      } );
-const drawCell
-  = cell =>
-    rowElement => {
+  return knight;
 
-      const cellElement = document.createElement( "span" );
-      const cellClass   = cellElement.classList.add( "cell" );
-      cellElement.append( cell.content );
+};
+const addPath
+  = knight =>
+    cell => {
 
-      // style cell based on content
-      const cellStyle = styleCell( cell )( cellElement );
-      rowElement.append( cellElement );
+      const moves = (0,_board__WEBPACK_IMPORTED_MODULE_1__.getMovesWithDepth)( knight.address )()();
+      const path  = (0,_board__WEBPACK_IMPORTED_MODULE_1__.getShortestPath)( moves )( cell.address );
+      const board = (0,_board__WEBPACK_IMPORTED_MODULE_1__.createBoard)( 8 )( 8 )( [knight, ...path] );
 
-      return addCellEventListeners( cell )( cellElement );
+      boardContainer.replaceChildren();
+      drawBoard( board )( knight );
 
     };
+const drawCell
+  = cell =>
+    rowElement =>
+      knight => {
+
+        const cellElement = document.createElement( "span" );
+        const cellClass   = cellElement.classList.add( "cell" );
+        cellElement.append( cell.content );
+
+        // style cell based on content
+        const cellStyle = styleCell( cell )( cellElement );
+        rowElement.append( cellElement );
+        const listener = cellElement.addEventListener(
+          "click",
+          () => {
+
+            if ( !knight ) {
+
+              return addKnight( cell );
+
+            }
+            addPath( knight )( cell );
+
+          },
+          { once: true }
+        );
+
+      };
 const styleCell
 = cell =>
   cellElement => {
@@ -3796,22 +3828,24 @@ const styleCell
       ` );
 
   };
-const drawBoard = input => {
+const drawBoard
+  = input =>
+    knight => {
 
-  input.map( row => {
+      input.map( row => {
 
-    const rowElement = document.createElement( "div" );
-    rowElement.classList.add( "row" );
-    row.map( cell =>
-      drawCell( cell )( rowElement ) );
-    return boardContainer.append( rowElement );
+        const rowElement = document.createElement( "div" );
+        rowElement.classList.add( "row" );
+        row.map( cell =>
+          drawCell( cell )( rowElement )( knight ) );
+        return boardContainer.append( rowElement );
 
-  } );
-  return content.append( boardContainer );
+      } );
+      return content.append( boardContainer );
 
-};
+    };
 
-drawBoard( sampleBoard );
+drawBoard( sampleBoard )();
 
 
 /***/ })
