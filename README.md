@@ -8,3 +8,5 @@ Functional try on the knight's minimal moves problem
 - Node
 - Webpack
 - npm
+
+## [Odin Project's curriculum lesson page](https://www.theodinproject.com/lessons/javascript-knights-travails)
