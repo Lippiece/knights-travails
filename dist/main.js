@@ -3648,7 +3648,7 @@ const getPathsToDestination
 
         }
         const sortedMoves = [...sortMovesByDistance( inputMoves )( destination )]
-          .slice( 0, 3 )
+          .slice( 0, 4 )
           .filter( move =>
             !checkIfMovePresent( path )( move.address ) );
         return sortedMoves.flatMap( move =>
